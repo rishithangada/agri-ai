@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { getSessionId } from "@/lib/session";
 import type { CalendarResponse, DayForecast } from "../api/calendar/route";
 
 const ALL_CROPS = [
@@ -59,7 +60,7 @@ export default function CalendarPage() {
       const res = await fetch("/api/calendar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ zip: zip.trim(), crops: selectedCrops }),
+        body: JSON.stringify({ zip: zip.trim(), crops: selectedCrops, sessionId: getSessionId() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load forecast");
