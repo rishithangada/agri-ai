@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { saveFarmProfile } from "@/lib/supabase";
-
-const anthropic = new Anthropic();
 
 const CROPS = [
   "Corn","Wheat","Soybeans","Tomatoes","Potatoes","Lettuce",
@@ -90,18 +87,28 @@ export async function POST(req: Request) {
       };
     });
 
-    // Claude gives a 2-sentence weekly summary + any crop-specific overrides
+    // Groq (free) for the 2-sentence agronomist weekly summary
     const weatherSummary = days.map(d => `${d.label}: ${d.tempMax}°F, ${d.precip}" rain → ${d.action}`).join("\n");
-    const msg = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 300,
-      messages: [{
-        role: "user",
-        content: `You are an agronomist. The farmer is growing: ${crops.join(", ")} near ${geo.display}.\n\nWeather + actions this week:\n${weatherSummary}\n\nWrite 2 sentences: a weekly summary and the single most important action for this farmer to take right now. Be specific to their crops.`,
-      }],
-    });
-
-    const aiSummary = msg.content[0].type === "text" ? msg.content[0].text : "";
+    let aiSummary = "";
+    const groqKey = process.env.GROQ_API_KEY;
+    if (groqKey) {
+      try {
+        const gr = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${groqKey}` },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            max_tokens: 200,
+            messages: [
+              { role: "system", content: "You are a concise agronomist. Reply in 2 sentences max." },
+              { role: "user", content: `Farmer grows: ${crops.join(", ")} near ${geo.display}.\n\nThis week:\n${weatherSummary}\n\nWhat's the weekly summary and single most important action right now?` },
+            ],
+          }),
+        });
+        const gd = await gr.json();
+        aiSummary = gd?.choices?.[0]?.message?.content ?? "";
+      } catch { /* non-fatal */ }
+    }
 
     const response: CalendarResponse = {
       location: geo.display,
