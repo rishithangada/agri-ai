@@ -9,12 +9,16 @@ export default function Home() {
           <LeafIcon className="w-7 h-7 text-[#84cc16]" />
           <span className="font-bold text-lg tracking-tight text-[#84cc16]">AgriAI</span>
         </div>
-        <Link
-          href="/advice"
-          className="text-sm bg-[#84cc16] text-[#0c1a00] font-semibold px-4 py-2 rounded-full hover:bg-[#a3e635] transition-colors"
-        >
-          Get Free Advice
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/calendar" className="text-sm text-[#84cc16] hover:underline">🗓 Calendar</Link>
+          <Link href="/disease" className="text-sm text-[#84cc16] hover:underline">🔬 Diseases</Link>
+          <Link
+            href="/advice"
+            className="text-sm bg-[#84cc16] text-[#0c1a00] font-semibold px-4 py-2 rounded-full hover:bg-[#a3e635] transition-colors"
+          >
+            Get Free Advice
+          </Link>
+        </div>
       </nav>
 
       {/* Hero */}
