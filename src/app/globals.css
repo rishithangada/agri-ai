@@ -10,8 +10,8 @@
 }
 
 body {
-  background: #0c1a00;
-  color: #fef9c3;
+  background: #030d01;
+  color: #fff;
 }
 
 /* Smooth focus rings */
@@ -19,3 +19,23 @@ body {
   outline: 2px solid #84cc16;
   outline-offset: 2px;
 }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(132,204,22,0.5); }
+  50%       { opacity: 0.7; box-shadow: 0 0 0 6px rgba(132,204,22,0); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.anim-fade-up { animation: fade-up 0.55s ease both; }
+.anim-fade-up-1 { animation: fade-up 0.55s ease 0.08s both; }
+.anim-fade-up-2 { animation: fade-up 0.55s ease 0.16s both; }
+.anim-fade-up-3 { animation: fade-up 0.55s ease 0.24s both; }
+.anim-fade-up-4 { animation: fade-up 0.55s ease 0.32s both; }
+.pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }

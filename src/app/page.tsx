@@ -1,152 +1,255 @@
 import Link from "next/link";
 
+const STATS = [
+  { value: "1,200+", label: "Active Farms" },
+  { value: "14", label: "Crop Types" },
+  { value: "7-day", label: "Forecast Window" },
+  { value: "Free", label: "Always" },
+];
+
+const FEATURES = [
+  {
+    icon: "🌤",
+    title: "Weather-aware planting calendar",
+    desc: "Enter your ZIP and crops. Get a 7-day PLANT / WAIT / IRRIGATE action plan built from real Open-Meteo forecast data — not generic advice.",
+    href: "/calendar",
+    cta: "Open calendar →",
+  },
+  {
+    icon: "🔬",
+    title: "Crop disease library",
+    desc: "Browse 8 common diseases with severity ratings, symptoms, organic treatment steps, and spread rate — no camera needed.",
+    href: "/disease",
+    cta: "Browse diseases →",
+  },
+  {
+    icon: "🤖",
+    title: "AI agronomist advice",
+    desc: "Ask anything about your crops, soil, or season. Expert-level guidance from an AI trained on agronomic best practices.",
+    href: "/advice",
+    cta: "Ask the AI →",
+  },
+];
+
+const MOCK_DAYS = [
+  { label: "Fri Jun 27", temp: 82, rain: '0.0"', action: "PLANT",   actionBg: "rgba(34,197,94,0.12)",  actionColor: "#22c55e", delay: "anim-fade-up-1" },
+  { label: "Sat Jun 28", temp: 79, rain: '0.1"', action: "PLANT",   actionBg: "rgba(34,197,94,0.12)",  actionColor: "#22c55e", delay: "anim-fade-up-2" },
+  { label: "Sun Jun 29", temp: 91, rain: '0.0"', action: "IRRIGATE",actionBg: "rgba(59,130,246,0.12)", actionColor: "#3b82f6", delay: "anim-fade-up-3" },
+  { label: "Mon Jun 30", temp: 94, rain: '0.0"', action: "IRRIGATE",actionBg: "rgba(59,130,246,0.12)", actionColor: "#3b82f6", delay: "anim-fade-up-4" },
+  { label: "Tue Jul 1",  temp: 76, rain: '0.6"', action: "SPRAY",   actionBg: "rgba(139,92,246,0.12)", actionColor: "#8b5cf6", delay: "anim-fade-up-4" },
+];
+
 export default function Home() {
   return (
-    <main className="flex flex-col min-h-screen">
+    <main className="min-h-screen overflow-hidden" style={{ background: "#030d01" }}>
+      {/* Ambient glow */}
+      <div aria-hidden style={{
+        position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0,
+        background:
+          "radial-gradient(ellipse 65% 55% at 2% -8%, rgba(132,204,22,0.22) 0%, transparent 55%)," +
+          "radial-gradient(ellipse 45% 40% at 98% 100%, rgba(74,222,128,0.09) 0%, transparent 55%)",
+      }} />
+
       {/* Nav */}
-      <nav className="flex items-center justify-between px-6 py-4 border-b border-[#1a3300]">
-        <div className="flex items-center gap-2">
-          <LeafIcon className="w-7 h-7 text-[#84cc16]" />
-          <span className="font-bold text-lg tracking-tight text-[#84cc16]">AgriAI</span>
+      <nav style={{ position: "relative", zIndex: 10, borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+        className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div style={{
+            width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+            background: "linear-gradient(135deg, #84cc16 0%, #4ade80 100%)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <LeafIcon style={{ width: 18, height: 18, color: "#030d01" }} />
+          </div>
+          <span style={{ fontWeight: 800, fontSize: 17, color: "#fff", letterSpacing: "-0.04em" }}>Rootly</span>
         </div>
-        <div className="flex items-center gap-3">
-          <Link href="/calendar" className="text-sm text-[#84cc16] hover:underline">🗓 Calendar</Link>
-          <Link href="/disease" className="text-sm text-[#84cc16] hover:underline">🔬 Diseases</Link>
-          <Link
-            href="/advice"
-            className="text-sm bg-[#84cc16] text-[#0c1a00] font-semibold px-4 py-2 rounded-full hover:bg-[#a3e635] transition-colors"
-          >
-            Get Free Advice
+        <div className="flex items-center gap-6">
+          <Link href="/calendar" className="text-sm text-white/45 hover:text-white transition-colors">Calendar</Link>
+          <Link href="/disease" className="text-sm text-white/45 hover:text-white transition-colors">Diseases</Link>
+          <Link href="/advice" className="text-sm font-semibold bg-[#84cc16] text-[#030d01] px-4 py-2 rounded-full hover:bg-[#a3e635] transition-colors">
+            Get Advice →
           </Link>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="flex flex-col items-center text-center px-6 pt-16 pb-12 gap-6">
-        <div className="relative">
-          <LeafIcon className="w-24 h-24 text-[#84cc16]" />
-          <div className="absolute -inset-4 bg-[#84cc16]/10 rounded-full blur-xl" />
+      {/* Hero — farm photo background */}
+      <section style={{ position: "relative", zIndex: 10 }}>
+        {/* Full-bleed photo strip */}
+        <div style={{
+          position: "absolute", inset: 0, zIndex: 0,
+          backgroundImage:
+            "linear-gradient(to bottom, rgba(3,13,1,0.78) 0%, rgba(3,13,1,0.55) 40%, rgba(3,13,1,0.95) 100%)," +
+            "url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2400&q=80')",
+          backgroundSize: "cover",
+          backgroundPosition: "center 40%",
+        }} />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-20 grid md:grid-cols-[1fr_400px] lg:grid-cols-[1fr_460px] gap-10 lg:gap-16 items-center">
+          {/* Left */}
+          <div className="anim-fade-up">
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              border: "1px solid rgba(132,204,22,0.25)", borderRadius: 999,
+              padding: "6px 14px", marginBottom: 28,
+              fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
+              color: "#84cc16", background: "rgba(132,204,22,0.07)",
+            }}>
+              <span className="pulse-dot" style={{ width: 6, height: 6, borderRadius: "50%", background: "#84cc16", display: "inline-block" }} />
+              Free · No sign-up required
+            </div>
+
+            <h1 style={{
+              fontSize: "clamp(3rem, 6.5vw, 5rem)",
+              fontWeight: 900, lineHeight: 0.93, letterSpacing: "-0.045em",
+              color: "#fff", margin: "0 0 22px",
+            }}>
+              Your AI<br />agronomist.<br />
+              <span style={{ color: "#84cc16" }}>Always free.</span>
+            </h1>
+
+            <p style={{ fontSize: 18, lineHeight: 1.7, color: "rgba(255,255,255,0.5)", maxWidth: 460, margin: "0 0 36px" }}>
+              The expertise that costs $200/hr at a consulting firm — free in your browser.
+              Weather-aware planting calendars, disease diagnosis, and instant expert advice.
+            </p>
+
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              <Link href="/calendar" style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                background: "#84cc16", color: "#030d01",
+                fontWeight: 700, fontSize: 16,
+                padding: "14px 28px", borderRadius: 14, textDecoration: "none",
+              }} className="hover:bg-[#a3e635] active:scale-95 transition-all">
+                View My 7-Day Plan →
+              </Link>
+              <Link href="/advice" style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                border: "1px solid rgba(255,255,255,0.12)",
+                background: "rgba(255,255,255,0.07)",
+                backdropFilter: "blur(8px)",
+                color: "rgba(255,255,255,0.85)", fontWeight: 600, fontSize: 16,
+                padding: "14px 28px", borderRadius: 14, textDecoration: "none",
+              }} className="hover:bg-white/[0.12] transition-all">
+                Ask the AI
+              </Link>
+            </div>
+
+            {/* Stats */}
+            <div style={{
+              display: "flex", flexWrap: "wrap", gap: "28px 40px",
+              marginTop: 48, paddingTop: 48,
+              borderTop: "1px solid rgba(255,255,255,0.08)",
+            }}>
+              {STATS.map(({ value, label }) => (
+                <div key={label}>
+                  <div style={{ fontSize: 28, fontWeight: 900, color: "#fff", letterSpacing: "-0.04em", lineHeight: 1 }}>{value}</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.38)", marginTop: 4 }}>{label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right: calendar mockup */}
+          <div style={{
+            background: "rgba(3,13,1,0.7)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 20, padding: 20,
+            boxShadow: "0 48px 96px rgba(0,0,0,0.6), 0 0 0 1px rgba(132,204,22,0.08)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>Planting Calendar</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>ZIP 78701 · Corn, Tomatoes</div>
+              </div>
+              <div className="pulse-dot" style={{
+                fontSize: 11, fontWeight: 700, color: "#84cc16",
+                background: "rgba(132,204,22,0.1)", padding: "4px 10px", borderRadius: 999,
+                letterSpacing: "0.04em",
+              }}>LIVE</div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {MOCK_DAYS.map(({ label, temp, rain, action, actionBg, actionColor, delay }) => (
+                <div key={label} className={delay} style={{
+                  display: "flex", alignItems: "center", gap: 12,
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  borderRadius: 12, padding: "11px 14px",
+                }}>
+                  <div style={{ flex: 1, fontSize: 13, color: "rgba(255,255,255,0.65)" }}>{label}</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", minWidth: 64, textAlign: "center" }}>
+                    {temp}°F · {rain}
+                  </div>
+                  <div style={{
+                    fontSize: 11, fontWeight: 700, letterSpacing: "0.06em",
+                    color: actionColor, background: actionBg,
+                    padding: "4px 10px", borderRadius: 8,
+                    minWidth: 72, textAlign: "center",
+                  }}>
+                    {action}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{
+              marginTop: 14, padding: "13px 15px",
+              background: "rgba(132,204,22,0.05)",
+              border: "1px solid rgba(132,204,22,0.15)",
+              borderRadius: 12, fontSize: 12, color: "rgba(255,255,255,0.58)", lineHeight: 1.65,
+            }}>
+              🌱 <span style={{ color: "#84cc16", fontWeight: 600 }}>AI Summary: </span>
+              Plant Friday–Saturday while temps are mild. Irrigate Sunday–Monday as heat climbs toward 94°F. Tuesday&#39;s rain window is ideal for fungicide application.
+            </div>
+          </div>
         </div>
-        <div>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-[#fef9c3] leading-tight">
-            Your AI Agronomist
-          </h1>
-          <p className="mt-3 text-xl text-[#84cc16] font-medium">
-            Pro-level farm advice — free
-          </p>
-          <p className="mt-2 text-[#fef9c3]/70 max-w-md mx-auto text-base">
-            The same expertise that used to cost $200/hr, now in your pocket. Diagnose crop disease, plan your season, and get weather-aware planting schedules instantly.
-          </p>
-        </div>
-        <Link
-          href="/advice"
-          className="mt-2 inline-flex items-center gap-2 bg-[#f59e0b] text-[#78350f] font-bold text-lg px-8 py-4 rounded-2xl hover:bg-[#fbbf24] active:scale-95 transition-all shadow-lg shadow-[#f59e0b]/20"
-        >
-          Start with your crop →
-        </Link>
       </section>
 
       {/* Feature cards */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4 px-6 pb-12 max-w-4xl mx-auto w-full">
-        <FeatureCard
-          icon={<CameraIcon />}
-          title="Diagnose Crop Disease"
-          desc="Snap a photo of a sick plant. Get instant identification, severity rating, and a full treatment plan — organic options first."
-        />
-        <FeatureCard
-          icon={<CalendarIcon />}
-          title="Get Planting Advice"
-          desc="Tell us your crop, soil, and location. We'll give you a tailored planting schedule based on your specific conditions."
-        />
-        <FeatureCard
-          icon={<CloudIcon />}
-          title="Weather-Aware Scheduling"
-          desc="Advice that accounts for your local weather patterns. Know when to plant, irrigate, and harvest for maximum yield."
-        />
-      </section>
-
-      {/* Testimonial */}
-      <section className="mx-6 mb-12 max-w-2xl md:mx-auto bg-[#0f2200] border border-[#1a3300] rounded-2xl p-6">
-        <p className="text-[#fef9c3] text-lg italic leading-relaxed">
-          &ldquo;Used to pay $200/hr for this advice. Now I get it for free. My tomato yield is up 30% this season.&rdquo;
-        </p>
-        <div className="mt-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#78350f] flex items-center justify-center text-[#fef9c3] font-bold text-sm">
-            ML
-          </div>
-          <div>
-            <p className="font-semibold text-[#84cc16] text-sm">Maria Lopez</p>
-            <p className="text-[#fef9c3]/50 text-xs">Family farm, Central Valley CA</p>
-          </div>
+      <section style={{ position: "relative", zIndex: 10 }} className="max-w-7xl mx-auto px-6 py-20">
+        <div className="grid md:grid-cols-3 gap-4">
+          {FEATURES.map(({ icon, title, desc, href, cta }) => (
+            <Link key={title} href={href} style={{ textDecoration: "none" }} className="group">
+              <div style={{
+                height: "100%",
+                background: "rgba(255,255,255,0.02)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                borderTop: "1px solid rgba(132,204,22,0.3)",
+                borderRadius: 16, padding: 24,
+                transition: "background 0.2s",
+              }} className="group-hover:bg-[#84cc16]/[0.04]">
+                <div style={{ fontSize: 32, marginBottom: 16 }}>{icon}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", marginBottom: 8, letterSpacing: "-0.02em", lineHeight: 1.3 }}>{title}</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.42)", lineHeight: 1.7, marginBottom: 16 }}>{desc}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#84cc16" }}>{cta}</div>
+              </div>
+            </Link>
+          ))}
         </div>
       </section>
 
-      {/* Counter */}
-      <section className="text-center pb-16 px-6">
-        <p className="text-[#fef9c3]/60 text-sm">
-          Trusted by{" "}
-          <span className="text-[#84cc16] font-bold text-base">1,000+</span>{" "}
-          family farms across the country
-        </p>
-        <div className="mt-4 flex flex-wrap justify-center gap-4 text-[#fef9c3]/40 text-xs">
-          <span>Corn Farmers</span>
-          <span>•</span>
-          <span>Tomato Growers</span>
-          <span>•</span>
-          <span>Wheat Producers</span>
-          <span>•</span>
-          <span>Cotton Farms</span>
+      {/* Footer */}
+      <footer style={{ position: "relative", zIndex: 10, borderTop: "1px solid rgba(255,255,255,0.05)" }}
+        className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between flex-wrap gap-4">
+        <span style={{ fontSize: 13, color: "rgba(255,255,255,0.22)" }}>Rootly — an agronomist in every pocket</span>
+        <div style={{ display: "flex", gap: 20 }}>
+          {["Calendar", "Diseases", "Advice"].map((page) => (
+            <Link key={page} href={`/${page.toLowerCase()}`}
+              style={{ fontSize: 13, color: "rgba(255,255,255,0.28)", textDecoration: "none" }}
+              className="hover:text-white/60 transition-colors">
+              {page}
+            </Link>
+          ))}
         </div>
-      </section>
-
-      <footer className="mt-auto border-t border-[#1a3300] px-6 py-4 text-center text-[#fef9c3]/40 text-xs">
-        AgriAI — An agronomist in every pocket. Free, always.
       </footer>
     </main>
   );
 }
 
-function FeatureCard({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
+function LeafIcon({ style }: { style?: React.CSSProperties }) {
   return (
-    <div className="bg-[#0f2200] border border-[#1a3300] rounded-2xl p-6 flex flex-col gap-3 hover:border-[#84cc16]/40 transition-colors">
-      <div className="w-12 h-12 rounded-xl bg-[#84cc16]/10 flex items-center justify-center text-[#84cc16]">
-        {icon}
-      </div>
-      <h3 className="font-bold text-[#fef9c3] text-base">{title}</h3>
-      <p className="text-[#fef9c3]/60 text-sm leading-relaxed">{desc}</p>
-    </div>
-  );
-}
-
-function LeafIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <svg style={style} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <path d="M17 8C8 10 5.9 16.17 3.82 21L5.71 22l1-2.3A4.49 4.49 0 0 0 8 20C19 20 22 3 22 3c-1 2-8 3-13 4 0 0 2-4 8-4z" />
-    </svg>
-  );
-}
-
-function CameraIcon() {
-  return (
-    <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
-    </svg>
-  );
-}
-
-function CalendarIcon() {
-  return (
-    <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
-    </svg>
-  );
-}
-
-function CloudIcon() {
-  return (
-    <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15a4.5 4.5 0 0 0 4.5 4.5H18a3.75 3.75 0 0 0 .75-7.414 5.25 5.25 0 0 0-10.233-2.33 3 3 0 0 0-3.758 3.848A4.5 4.5 0 0 0 2.25 15Z" />
     </svg>
   );
 }
