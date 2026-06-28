@@ -8,6 +8,7 @@ export const supabase = createClient(url, key);
 export type FarmProfile = {
   session_id: string;
   zip?: string;
+  farm_size?: string;
   location_display?: string;
   lat?: number;
   lon?: number;
@@ -19,7 +20,21 @@ export async function saveFarmProfile(profile: FarmProfile) {
   const { error } = await supabase
     .from("farm_profiles")
     .upsert(profile, { onConflict: "session_id" });
-  if (error) console.error("saveFarmProfile:", error.message);
+  if (!error) return;
+
+  const fallbackProfile: Omit<FarmProfile, "farm_size"> = {
+    session_id: profile.session_id,
+    zip: profile.zip,
+    location_display: profile.location_display,
+    lat: profile.lat,
+    lon: profile.lon,
+    crops: profile.crops,
+    soil_type: profile.soil_type,
+  };
+  const fallback = await supabase
+    .from("farm_profiles")
+    .upsert(fallbackProfile, { onConflict: "session_id" });
+  if (fallback.error) console.error("saveFarmProfile:", fallback.error.message);
 }
 
 export async function getFarmProfile(sessionId: string): Promise<FarmProfile | null> {

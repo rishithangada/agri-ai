@@ -45,15 +45,19 @@ export default function ResultsPage() {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("agri_result");
-    if (!stored) { router.push("/advice"); return; }
-    setResult(JSON.parse(stored));
+    const timer = window.setTimeout(() => {
+      const stored = sessionStorage.getItem("agri_result");
+      if (!stored) { router.push("/advice"); return; }
+      setResult(JSON.parse(stored));
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [router]);
 
   function toggleCheck(item: string) {
     setCheckedItems(prev => {
       const next = new Set(prev);
-      next.has(item) ? next.delete(item) : next.add(item);
+      if (next.has(item)) next.delete(item);
+      else next.add(item);
       return next;
     });
   }

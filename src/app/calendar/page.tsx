@@ -1,14 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getSessionId } from "@/lib/session";
+import { getFarmProfile, saveFarmProfile, type FarmProfile } from "@/lib/supabase";
 import type { CalendarResponse, DayForecast } from "../api/calendar/route";
 
 const ALL_CROPS = [
   "Corn","Wheat","Soybeans","Tomatoes","Potatoes","Lettuce",
   "Peppers","Cucumbers","Beans","Carrots","Onions","Spinach",
 ];
+
+const ONBOARDING_CROPS = ["Corn", "Tomatoes", "Wheat", "Soybeans", "Cotton", "Other"];
+const FARM_PROFILE_KEY = "agri_farm_profile";
+
+type StoredFarmProfile = FarmProfile & {
+  farm_size?: string;
+};
 
 const ACTION_ICON: Record<DayForecast["action"], string> = {
   PLANT: "🌱", WAIT: "⏸", HARVEST: "🌾", SPRAY: "💧", IRRIGATE: "🚿",
@@ -20,7 +28,7 @@ function DayCard({ day }: { day: DayForecast }) {
       <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{day.label}</p>
       <div className="flex items-center justify-between">
         <span className="text-2xl font-bold text-white">{day.tempMax}°F</span>
-        <span className="text-sm text-slate-400">{day.precip}" rain</span>
+        <span className="text-sm text-slate-400">{day.precip} in rain</span>
       </div>
       <div
         className="mt-1 flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold"
@@ -37,14 +45,90 @@ function DayCard({ day }: { day: DayForecast }) {
 export default function CalendarPage() {
   const [zip, setZip] = useState("");
   const [selectedCrops, setSelectedCrops] = useState<string[]>([]);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingZip, setOnboardingZip] = useState("");
+  const [onboardingCrops, setOnboardingCrops] = useState<string[]>([]);
+  const [farmSize, setFarmSize] = useState("1-10 acres");
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<CalendarResponse | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      const sessionId = getSessionId();
+      const stored = localStorage.getItem(FARM_PROFILE_KEY);
+      if (stored) {
+        try {
+          const profile = JSON.parse(stored) as StoredFarmProfile;
+          if (!cancelled) {
+            setZip(profile.zip ?? "");
+            setSelectedCrops(profile.crops ?? []);
+            setOnboardingZip(profile.zip ?? "");
+            setOnboardingCrops(profile.crops ?? []);
+            setFarmSize(profile.farm_size ?? "1-10 acres");
+            setProfileLoaded(true);
+          }
+          return;
+        } catch {
+          localStorage.removeItem(FARM_PROFILE_KEY);
+        }
+      }
+
+      const remoteProfile = await getFarmProfile(sessionId);
+      if (cancelled) return;
+      if (remoteProfile?.zip || remoteProfile?.crops?.length) {
+        const profile = remoteProfile as StoredFarmProfile;
+        localStorage.setItem(FARM_PROFILE_KEY, JSON.stringify(profile));
+        setZip(profile.zip ?? "");
+        setSelectedCrops(profile.crops ?? []);
+        setOnboardingZip(profile.zip ?? "");
+        setOnboardingCrops(profile.crops ?? []);
+        setFarmSize(profile.farm_size ?? "1-10 acres");
+      } else {
+        setShowOnboarding(true);
+      }
+      setProfileLoaded(true);
+    }, 0);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, []);
 
   function toggleCrop(crop: string) {
     setSelectedCrops(prev =>
       prev.includes(crop) ? prev.filter(c => c !== crop) : [...prev, crop]
     );
+  }
+
+  function toggleOnboardingCrop(crop: string) {
+    setOnboardingCrops(prev =>
+      prev.includes(crop) ? prev.filter(c => c !== crop) : [...prev, crop]
+    );
+  }
+
+  async function saveOnboarding(e: React.FormEvent) {
+    e.preventDefault();
+    if (!onboardingZip.trim() || onboardingCrops.length === 0) {
+      setError("Enter your ZIP code and select at least one crop.");
+      return;
+    }
+
+    const profile: StoredFarmProfile = {
+      session_id: getSessionId(),
+      zip: onboardingZip.trim(),
+      crops: onboardingCrops,
+      farm_size: farmSize,
+    };
+    localStorage.setItem(FARM_PROFILE_KEY, JSON.stringify(profile));
+    setZip(profile.zip ?? "");
+    setSelectedCrops(profile.crops ?? []);
+    setShowOnboarding(false);
+    setError("");
+    await saveFarmProfile(profile);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -89,7 +173,18 @@ export default function CalendarPage() {
             <input
               type="text"
               value={zip}
-              onChange={e => setZip(e.target.value)}
+              onChange={e => {
+                setZip(e.target.value);
+                const stored = localStorage.getItem(FARM_PROFILE_KEY);
+                if (stored) {
+                  try {
+                    const profile = JSON.parse(stored) as StoredFarmProfile;
+                    localStorage.setItem(FARM_PROFILE_KEY, JSON.stringify({ ...profile, zip: e.target.value }));
+                  } catch {
+                    localStorage.removeItem(FARM_PROFILE_KEY);
+                  }
+                }
+              }}
               placeholder="e.g. 78701"
               maxLength={10}
               className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white placeholder:text-slate-500 outline-none focus:border-lime-400 transition"
@@ -180,6 +275,64 @@ export default function CalendarPage() {
           </div>
         )}
       </div>
+
+      {showOnboarding && profileLoaded && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4">
+          <form onSubmit={saveOnboarding} className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#0f250f] p-6 shadow-2xl">
+            <h2 className="text-2xl font-bold">Farm profile</h2>
+            <p className="mt-2 text-sm text-slate-300">Save your farm details so the calendar opens pre-filled next time.</p>
+
+            <label className="mt-5 block text-sm font-semibold text-lime-400">
+              ZIP code
+              <input
+                value={onboardingZip}
+                onChange={(e) => setOnboardingZip(e.target.value)}
+                maxLength={10}
+                className="mt-2 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none focus:border-lime-400"
+                placeholder="e.g. 78701"
+              />
+            </label>
+
+            <div className="mt-5">
+              <p className="mb-3 text-sm font-semibold text-lime-400">Primary crops</p>
+              <div className="flex flex-wrap gap-2">
+                {ONBOARDING_CROPS.map((crop) => (
+                  <button
+                    key={crop}
+                    type="button"
+                    onClick={() => toggleOnboardingCrop(crop)}
+                    className={`rounded-full border px-4 py-1.5 text-sm font-medium ${
+                      onboardingCrops.includes(crop)
+                        ? "border-lime-400 bg-lime-400 text-black"
+                        : "border-white/20 text-slate-300"
+                    }`}
+                  >
+                    {crop}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <label className="mt-5 block text-sm font-semibold text-lime-400">
+              Farm size
+              <select
+                value={farmSize}
+                onChange={(e) => setFarmSize(e.target.value)}
+                className="mt-2 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none focus:border-lime-400"
+              >
+                <option>Under 1 acre</option>
+                <option>1-10 acres</option>
+                <option>11-100 acres</option>
+                <option>100+ acres</option>
+              </select>
+            </label>
+
+            <button type="submit" className="mt-6 w-full rounded-xl bg-lime-400 py-3 font-bold text-black hover:bg-lime-300">
+              Save farm profile
+            </button>
+          </form>
+        </div>
+      )}
     </main>
   );
 }
